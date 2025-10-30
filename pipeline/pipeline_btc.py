@@ -1,4 +1,3 @@
-# pipeline_btc.py
 from __future__ import annotations
 from dataclasses import dataclass, asdict
 from typing import Protocol, Literal, Dict, Any, List, Optional
@@ -39,9 +38,8 @@ class RateProvider(Protocol):
 class FixedRateProvider:
     """
     Proveedor simulado:
-    - Precios BTC (en moneda base)
-    - FX USD→{USD,EUR,GBP}
-    Puedes cambiar valores según tu escenario o implementar una versión que consulte una API real.
+    - Precios BTC
+    - FX USD -> {USD,EUR,GBP}
     """
     def __init__(self):
         self._btc = {
@@ -69,7 +67,7 @@ class Filter(Protocol):
     def process(self, context: Dict[str, Any]) -> Dict[str, Any]: ...
 
 class ValidationFilter:
-    """Verifica que la transacción tenga datos obligatorios y válidos."""
+    """Verificar que la transacción tenga datos obligatorios y válidos."""
     def process(self, context: Dict[str, Any]) -> Dict[str, Any]:
         tx: Transaction = context["transaction"]
         if not tx.user_id or not isinstance(tx.user_id, str):
@@ -81,7 +79,7 @@ class ValidationFilter:
         return context
 
 class AuthFilter:
-    """Autentica al usuario contra una 'BD' simulada."""
+    """Autenticar al usuario contra una 'BD' simulada."""
     def __init__(self, users_index: Dict[str, User]):
         self.users = users_index
 
@@ -96,7 +94,7 @@ class AuthFilter:
         return context
 
 class TransformFilter:
-    """Convierte el monto de BTC a la moneda base usando el proveedor de tasas."""
+    """Convertir el monto de BTC a la moneda base usando el proveedor de tasas."""
     def __init__(self, rates: RateProvider):
         self.rates = rates
 
@@ -109,7 +107,7 @@ class TransformFilter:
 
 class FeeFilter:
     """
-    Calcula la comisión: fija en USD (p.ej. 5.00 USD) y la convierte a la moneda base.
+    Calcular la comisión: fija en USD (p.ej. 5.00 USD) y la convierte a la moneda base.
     Suma la comisión al total.
     """
     def __init__(self, rates: RateProvider):
@@ -125,7 +123,7 @@ class FeeFilter:
         return context
 
 class StorageFilter:
-    """Guarda la transacción en SQLite."""
+    """Guardar la transacción en SQLite."""
     def __init__(self, db_path: str = "transactions.db"):
         self.db_path = db_path
         self._ensure_tables()
