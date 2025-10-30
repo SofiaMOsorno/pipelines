@@ -6,9 +6,6 @@ import sqlite3
 import json
 import time
 
-# =========================
-# Domain Models & Errors
-# =========================
 Currency = Literal["USD", "EUR", "GBP"]
 
 class PipelineError(Exception): ...
@@ -22,7 +19,6 @@ class Transaction:
     user_id: str
     btc_amount: float
     base_currency: Currency
-    # Campos que se completan durante el pipeline:
     btc_price_in_base: Optional[float] = None
     subtotal_base: Optional[float] = None
     commission_usd: float = 5.0
@@ -36,9 +32,6 @@ class User:
     name: str
     active: bool = True
 
-# =========================
-# Rate Provider (Mock)
-# =========================
 class RateProvider(Protocol):
     def get_btc_price(self, currency: Currency) -> float: ...
     def usd_to(self, currency: Currency) -> float: ...
@@ -72,9 +65,6 @@ class FixedRateProvider:
             raise TransformError(f"Moneda no soportada para FX: {currency}")
         return self._fx_usd[currency]
 
-# =========================
-# Filters (each one has a single responsibility)
-# =========================
 class Filter(Protocol):
     def process(self, context: Dict[str, Any]) -> Dict[str, Any]: ...
 
@@ -166,7 +156,6 @@ class StorageFilter:
 
     def process(self, context: Dict[str, Any]) -> Dict[str, Any]:
         tx: Transaction = context["transaction"]
-        # Validación mínima antes de guardar
         required = [tx.subtotal_base, tx.total_base, tx.commission_base, tx.btc_price_in_base]
         if any(v is None for v in required):
             raise StorageError("Transacción incompleta; verifique filtros previos.")
@@ -197,9 +186,6 @@ class StorageFilter:
         context["storage_result"] = "ok"
         return context
 
-# =========================
-# Pipeline Orchestrator
-# =========================
 class Pipeline:
     def __init__(self, filters: List[Filter]):
         self.filters = filters
@@ -210,9 +196,6 @@ class Pipeline:
             context = f.process(context)
         return context
 
-# =========================
-# Example: Mock Users & Runner
-# =========================
 def load_mock_users() -> Dict[str, User]:
     # Podrías cargar esto de un JSON local; aquí lo dejamos en memoria por simplicidad
     raw = [
@@ -234,7 +217,6 @@ def main():
         StorageFilter(db_path="transactions.db"),
     ])
 
-    # Casos de ejemplo (puedes cambiarlos)
     examples = [
         Transaction(user_id="u001", btc_amount=0.01, base_currency="USD"),
         Transaction(user_id="u002", btc_amount=0.05, base_currency="EUR"),
